@@ -15,3 +15,11 @@ class Post(models.Model):
 
     def get_absolute_url(self):
         return reverse('post-detail', kwargs={'pk': self.pk})
+
+
+class Images(models.Model):
+    post = models.ForeignKey(Post, default=None, on_delete=models.CASCADE)
+    image = models.ImageField(upload_to='posts_pic', verbose_name='Image')
+
+    def __str__(self):
+        return self.post.title + 'Image'
