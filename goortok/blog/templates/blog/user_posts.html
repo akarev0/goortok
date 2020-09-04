@@ -3,13 +3,15 @@
 <h1 class="mb-3">Post by {{ view.kwargs.username }} ({{ page_obj.paginator.count }})</h1>
 {% for post in posts%}
 <article class="media content-section">
-    <img class="rounded-circle article-img" src="{{ post.author.profile.image.url }}">
+    <img class="rounded-circle article-img" src="{{ post.author.profile.image.url }}" alt="Image not found">
     <div class="media-body">
         <div class="article-metadata">
             <a class="mr-2" href="{% url 'user-posts' post.author.username %}">{{ post.author }}</a>
             <small class="text-muted">{{ post.date_posted|date:'Y-F-d' }}</small>
         </div>
-        <h2><a class="article-title" href="{% url 'post-detail' post.id %}">{{ post.title }}</a></h2>
+        <h2>
+            <a class="article-title" href="{% url 'post-detail' post.id %}">{{ post.title }}</a>
+        </h2>
         <p class="article-content">{{ post.content }}</p>
     </div>
 </article>
@@ -17,8 +19,8 @@
     {% if is_paginated %}
 
         {% if page_obj.has_previous %}
-            <a class="btn btn-outline-info mb-4" href="?page=1">First</a>
-            <a class="btn btn-outline-info mb-4" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+            <a class="btn btn-outline-info mb-4" href="?page=1">Перша</a>
+            <a class="btn btn-outline-info mb-4" href="?page={{ page_obj.previous_page_number }}">Попередня</a>
         {% endif %}
 
         {% for num in page_obj.paginator.page_range %}
@@ -30,8 +32,8 @@
         {% endfor %}
 
         {% if page_obj.has_next %}
-            <a class="btn btn-outline-info mb-4" href="?page={{ page_obj.next_page_number }}">Next</a>
-            <a class="btn btn-outline-info mb-4" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+            <a class="btn btn-outline-info mb-4" href="?page={{ page_obj.next_page_number }}">Наступна</a>
+            <a class="btn btn-outline-info mb-4" href="?page={{ page_obj.paginator.num_pages }}">Остання</a>
         {% endif %}
 
     {% endif %}

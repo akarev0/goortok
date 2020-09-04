@@ -1,8 +1,14 @@
+from typing import Dict
+
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.shortcuts import render, get_object_or_404
-from .models import Post
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.contrib.auth.models import User
+from django.forms import modelformset_factory
+from django.shortcuts import render, get_object_or_404, redirect
+from django.views.generic import ListView, UpdateView, DeleteView
+
+from .forms import PostCreateForm
+from .models import Post, Images
 
 
 class PostListView(ListView):
@@ -25,17 +31,48 @@ class UserPostListView(ListView):
         return Post.objects.filter(author=user).order_by('-date_posted')
 
 
-class PostDetailView(DetailView):
-    model = Post
+@login_required
+def post_details(request, pk: int):
+    post = get_object_or_404(Post, pk=pk)
+    images = Images.objects.filter(post=post)
+    context = {
+        'post': post,
+        'images': images
+    }
+
+    return render(request, 'blog/post_detail.html', context=context)
 
 
-class PostCreateView(LoginRequiredMixin, CreateView):
-    model = Post
-    fields = ['title', 'content']
+@login_required
+def create_post(request):
 
-    def form_valid(self, form):
-        form.instance.author = self.request.user
-        return super().form_valid(form)
+    ImageFormset = modelformset_factory(Images, fields=('image',), extra=4)
+
+    form = PostCreateForm()
+    formset = ImageFormset(queryset=Images.objects.none())
+
+    if request.method == 'POST':
+        form = PostCreateForm(request.POST)
+        formset = ImageFormset(request.POST or None, request.FILES or None)
+        if form.is_valid() and formset.is_valid():
+            post = form.save(commit=False)
+            post.author = request.user
+            post.save()
+
+            for photo in formset:
+                try:
+                    post_image = Images(post=post, image=photo.cleaned_data['image'])
+                    post_image.save()
+                except Exception:
+                    break
+            return redirect('blog-home')
+
+    context: Dict = {
+        'form': form,
+        'formset': formset
+    }
+
+    return render(request, 'blog/post_form.html', context=context)
 
 
 class PostUpdateView(UserPassesTestMixin, LoginRequiredMixin, UpdateView):
